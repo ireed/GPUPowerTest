@@ -24,10 +24,13 @@ endif()
 set(FLAGS "")
 set(CMAKE_CUDA_FLAGS "" CACHE STRING "" FORCE)
 # Note that cmake will insert semicolons between these item automatically...
-set(SM_LIST "70,75,80" CACHE STRING "Please input compute capability")
+set(SM_LIST "90" CACHE STRING "Please input compute capability")
 MARK_AS_ADVANCED(SM_LIST)
 string(REPLACE "," " " DISPLAY_SMS_LIST ${SM_LIST})
 string(REPLACE "," ";" SMS_LIST ${SM_LIST})
+
+message("SM_LIST" ${SMS_LIST})
+
 foreach(SM ${SMS_LIST})
     string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_${SM},code=sm_${SM}")
 endforeach(SM)
@@ -80,11 +83,14 @@ message(status " CUDA_TOOLKIT_ROOT_DIR: ${CUDA_TOOLKIT_ROOT_DIR}")
 
 include_directories(${CUDA_TOOLKIT_ROOT_DIR}/include)
 include_directories(${CUDA_HOME}/cublasLt)
+include_directories("/opt/openmpi-4.1.5/include")
+link_directories("/opt/openmpi-4.1.5/lib")
 
 LIST(APPEND SRC_FILES
      ${PROJECT_SOURCE_DIR}/burn.cu
 )
 
 add_executable(gpt gpt.c ${SRC_FILES})
+set_target_properties(gpt PROPERTIES CUDA_ARCHITECTURES ${SM_LIST})
 target_link_libraries(gpt cublasLt mpi curand)
 
